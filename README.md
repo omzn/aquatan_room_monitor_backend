@@ -7,15 +7,15 @@
 
 ```
 [BLE Nano]  BLE     [M5Stick C]                    WiFi  [サーバ]  mysql
-BLE_beacon ----->  
-BLE_beacon ----->  ibeacon_scanner (各部屋に設置) -----> labapi.js -----> room_monitor
-BLE_beacon ----->  ibeacon_scanner (各部屋に設置)  
-BLE_beacon ----->  
+ibeacon    ----->  
+ibeacon    ----->  ibeacon_scanner (各部屋に設置) -----> apiserver.js -----> room_monitor
+ibeacon    ----->  ibeacon_scanner (各部屋に設置)  
+ibeacon    ----->  
 ```
 
 ## How to use
 
-1. BLE_beaconの準備  (RedBear Lab BLE Nano)
+1. ibeaconの準備  (RedBear Lab BLE Nano)
   * iBeacon規格に則ったビーコンを作成する．
   * 先頭の`GIT_TO_DETECT`をグループ共通の数字にする．(major number)
   * `MY_UID` を個別の識別番号にする．この識別番号は後々使う．(minor number)
@@ -47,7 +47,7 @@ BLE_beacon ----->
     "lost_detect_interval": 60000	
 }
 ``` 
-  * `node labapi.js`にて実行．3001ポートを待ち受けにして待機．
+  * `node apiserver.js`にて実行．3001ポートを待ち受けにして待機．
 5. 確認
   * `room_monitor`ビューを眺める．
   * `log`テーブルには，検出と失探のログが残る．
