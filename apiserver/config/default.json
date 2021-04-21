@@ -1,0 +1,12 @@
+
+{
+    "db":{
+        "host":"10.0.0.2",
+        "database":"hogedb",
+        "user":"hoge",
+        "password":"hogehoge",
+	"multipleStatements": true
+    },
+    "port": 3001,
+    "lost_detect_interval": 60000	
+}
