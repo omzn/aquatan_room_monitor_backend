@@ -1,5 +1,5 @@
 CREATE DATABASE ibeacon;
-CREATE USER 'aquatan'@'%' IDENTIFIED BY 'aquatan';
+use ibeacon;
 
 CREATE TABLE `log` (
   `id` int(11) unsigned NOT NULL AUTO_INCREMENT,
