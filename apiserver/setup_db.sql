@@ -1,3 +1,6 @@
+CREATE DATABASE ibeacon;
+CREATE USER 'aquatan'@'%' IDENTIFIED BY 'aquatan';
+
 CREATE TABLE `log` (
   `id` int(11) unsigned NOT NULL AUTO_INCREMENT,
   `timestamp` tinytext,
@@ -41,18 +44,18 @@ CREATE TABLE `room_log` (
   KEY `timestamp` (`timestamp`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
-CREATE SQL SECURITY INVOKER VIEW `room_status`
-AS SELECT
-   `room_detectors`.`label` AS `label`,
-   `room_detectors`.`place` AS `place`,round((avg(`room_detectors`.`avgproxi`) + (20 / sum(`room_detectors`.`rawcount`))),4) AS `avgproxi`,sum(`room_detectors`.`rawcount`) AS `sumcount`
-FROM `room_detectors` group by `room_detectors`.`label` order by `room_detectors`.`label`,`avgproxi`;
-
 CREATE SQL SECURITY INVOKER VIEW `room_detectors`
 AS SELECT
    `t1`.`label` AS `label`,
    `t1`.`place` AS `place`,
    `t1`.`d_id` AS `d_id`,(avg(`t1`.`proxi`) + (30 / count(`t1`.`proxi`))) AS `avgproxi`,avg(`t1`.`proxi`) AS `rawavgproxi`,count(`t1`.`proxi`) AS `rawcount`
 FROM `room_log` `t1` where `t1`.`label` in (select distinct `ble_tag`.`label` from `ble_tag`) group by `t1`.`label`,`t1`.`place`,`t1`.`d_id` order by `t1`.`label`,(select min(`t3`.`proxi`) from `room_log` `t3` where (`t3`.`label` in (select distinct `ble_tag`.`label` from `ble_tag`) and (`t1`.`label` = `t3`.`label`) and (`t1`.`place` = `t3`.`place`) and (`t1`.`d_id` = `t3`.`d_id`))),`t1`.`place`;
+
+CREATE SQL SECURITY INVOKER VIEW `room_status`
+AS SELECT
+   `room_detectors`.`label` AS `label`,
+   `room_detectors`.`place` AS `place`,round((avg(`room_detectors`.`avgproxi`) + (20 / sum(`room_detectors`.`rawcount`))),4) AS `avgproxi`,sum(`room_detectors`.`rawcount`) AS `sumcount`
+FROM `room_detectors` group by `room_detectors`.`label` order by `room_detectors`.`label`,`avgproxi`;
 
 CREATE SQL SECURITY INVOKER VIEW `room_monitor`
 AS SELECT
