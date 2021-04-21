@@ -6,7 +6,7 @@
 * ibeacon: ビーコン
 
 ```
-[BLE Nano]  BLE     [M5Stick C]                    WiFi  [サーバ]  mysql
+[BLE Nano]  BLE     [M5Stick C]                    WiFi    [サーバ]    mysql
 ibeacon    ----->  
 ibeacon    ----->  ibeacon_scanner (各部屋に設置) -----> apiserver.js -----> room_monitor
 ibeacon    ----->  ibeacon_scanner (各部屋に設置)  
@@ -112,32 +112,32 @@ M5Stack/M5StickC用に作った．切り替えは先頭のこれをどちらか�
 1. WiFiの設定をする．ssid: BEACON_SCAN に接続して，ssid, passwordの設定
 2. `/config`からはホスト名(hostname), APIサーバのエンドポイント(url_endpoint), APIのパス(api_beaconadd, api_beaconalive), 部屋識別子(place), 部屋内検出器ID(detector_id)が設定できる．
 3. 必ず，url_endpointの設定をする．
-```
+```sh
 $ curl "http://scanner.local/config?url_endpoint=http://10.0.0.1:3001"
 ```
 4. また，部屋識別子(place), 部屋内検出器ID(detector_id) はペアで一意になる必要がある．
-```
+```sh
 $ curl "http://scanner.local/config?place=MyRoom&detector_id=0"
 ```
    3と4は同時に設定した方が早い．
-```
+```sh
 $ curl "http://scanner.local/config?url_endpoint=http://10.0.0.1:3001&place=MyRoom&detector_id=0"
 ```
 
 ### 動作
 1. 1秒ずつBLEをスキャンしてiBeaconを検出．
-2. 検出したiBeaconについて，apiserver:/beacon/addにアクセスして登録
-3. 一定時間(60秒)ごとに検出器の生存確認をapiserver:/beacon/aliveにアクセスして登録
+2. 検出したiBeaconについて，`apiserver:/beacon/add`にアクセスして登録
+3. 一定時間(60秒)ごとに検出器の生存確認を`apiserver:/beacon/alive`にアクセスして登録
 
 ## ibeacon
 
 * RedBear Lab製 BLE Nano (V1.5, V2.0)用のビーコン発信器
-* major, minorをプログラムに直書きして埋め込む．
+* `major`, `minor`をプログラムに直書きして埋め込む．
 * CR2032で6ヶ月〜1年運用可能．
 
 ## DB
 
-* ble_tag テーブルに，最低限 label, name, activeを登録する．
+* `ble_tag` テーブルに，最低限 `label`, `name`, `active`を登録する．
 
 -------
 
