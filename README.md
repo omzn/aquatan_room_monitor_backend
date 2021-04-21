@@ -12,6 +12,11 @@ ibeacon    ----->  ibeacon_scanner (各部屋に設置) -----> apiserver.js ----
 ibeacon    ----->  ibeacon_scanner (各部屋に設置)  
 ibeacon    ----->  
 ```
+## 用意するもの
+
+* BLE Nano または 市販のiBeacon: 検知対象の人数分
+* M5Stick-C or M5Stack (ESP32なら多少の改変でOK) : 検知したい部屋の数以上
+* MySQLが動作するサーバ: 1台 （大量に書き込みと読み出しが発生するので注意）
 
 ## How to use
 
@@ -19,7 +24,7 @@ ibeacon    ----->
   * iBeacon規格に則ったビーコンを作成する．
   * 先頭の`GIT_TO_DETECT`をグループ共通の数字にする．(major number)
   * `MY_UID` を個別の識別番号にする．この識別番号は後々使う．(minor number)
-  * major, minorが固定の市販iBeaconを使ってもよい．
+  * major, minorが固定で，minorがすべて異なる市販iBeaconを使ってもよい．
 2. ibeacon_scannerの準備 (M5Stick-C)
   * 先頭の`GID_TO_DETECT`をビーコンと同じに設定する．
     * ビーコンのmajorがバラバラな場合，`DISABLE_GID_CHECK`を有効にする．
@@ -124,7 +129,7 @@ $ curl "http://scanner.local/config?url_endpoint=http://10.0.0.1:3001&place=MyRo
 2. 検出したiBeaconについて，apiserver:/beacon/addにアクセスして登録
 3. 一定時間(60秒)ごとに検出器の生存確認をapiserver:/beacon/aliveにアクセスして登録
 
-## BLE_beacon
+## ibeacon
 
 * RedBear Lab製 BLE Nano (V1.5, V2.0)用のビーコン発信器
 * major, minorをプログラムに直書きして埋め込む．
