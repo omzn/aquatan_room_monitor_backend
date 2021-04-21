@@ -86,7 +86,12 @@ ibeacon    ----->
   * `room`: 検出器のある部屋の識別子(上のplaceと同じ物)
   * `detector_id`: 検出器の室内id
   * `ipaddress`: 検出器のipアドレス
-
+* `/beacon/status`
+  * ibeaconの状況をjsonで取得（例）↓
+```json
+{"target":{"bt15146":{"status":"Lost","time":"2021-04-21 13:39:31"},"bt15098":{"status":"Found_8-302","time":"2021-04-21 13:05:29"}}}
+```
+  
 
 ## クライアント (ibeacon_scanner)
 
