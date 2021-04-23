@@ -16,6 +16,7 @@ ibeacon    ----->
 
 * BLE Nano または 市販のiBeacon: 検知対象の人数分
 * M5Stick-C or M5Stack (ESP32なら多少の改変でOK) : 検知したい部屋の数以上
+  * 2021-04-23現在，M5Stackではスケッチが大きすぎて起動できない問題が発生しています．
 * MySQLが動作するサーバ: 1台 （大量に書き込みと読み出しが発生するので注意）
 
 ## How to use
@@ -31,8 +32,11 @@ ibeacon    ----->
   * `DEFAULT_*`に初期値を設定する．（この設定は後からWeb経由で変更可能）
   * Partition Schemeを `Minimal SPIFFS`に設定しないと書き込めない．(スケッチが巨大)  
 3. データベースの準備
-  * (推奨) このシステムが使うデータベースを作成する．
-  * `apiserver/setup_db.sql`を実行し，mysqlにデータベースを作成する．
+  * `apiserver/setup_db.sql`を実行し，mysqlにデータベースを作成する．(`ibeacon`データベースが作成される．)
+```sh
+$ mysql -u root < setup_db.sql
+```
+  * `ibeacon`データベースにアクセスできるユーザを作成する．
   * `ble_tag` テーブルの `beacon`に利用するビーコンの識別番号を記述，`name`は対応する人名等を入れる．（管理のため）
   * `ble_tab` テーブルの `active`を1にするとそのビーコンが検出可能になる．
     * DBの`room_log`テーブルには，ビーコンからの生の情報が逐次書き込まれる．（一定時間以上経過したものは削除）
@@ -43,10 +47,10 @@ ibeacon    ----->
   {
     "db":{
         "host":"localhost",
-        "database":"hogedb",
+        "database":"ibeacon",
         "user":"hoge",
         "password":"hogehoge",
-	"multipleStatements": true
+  	    "multipleStatements": true
     },
     "port": 3001,
     "lost_detect_interval": 60000	
