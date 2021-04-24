@@ -15,7 +15,7 @@ ibeacon    ----->
 ## 用意するもの
 
 * BLE Nano または 市販のiBeacon: 検知対象の人数分
-* M5Stick-C or M5Stack (ESP32なら多少の改変でOK) : 検知したい部屋の数以上
+* M5Stick-C or M5Stick-C Plus or M5Stack (ESP32なら多少の改変でOK) : 検知したい部屋の数以上
 * MySQLが動作するサーバ: 1台 （大量に書き込みと読み出しが発生するので注意）
 
 ## How to use
