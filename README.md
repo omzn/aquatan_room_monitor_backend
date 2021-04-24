@@ -16,7 +16,6 @@ ibeacon    ----->
 
 * BLE Nano または 市販のiBeacon: 検知対象の人数分
 * M5Stick-C or M5Stack (ESP32なら多少の改変でOK) : 検知したい部屋の数以上
-  * 2021-04-23現在，M5Stackではスケッチが大きすぎて起動できない問題が発生しています．
 * MySQLが動作するサーバ: 1台 （大量に書き込みと読み出しが発生するので注意）
 
 ## How to use
@@ -37,6 +36,10 @@ ibeacon    ----->
 $ mysql -u root < setup_db.sql
 ```
   * `ibeacon`データベースにアクセスできるユーザを作成する．
+```sql
+CREATE USER hoge@localhost identified by 'hogehoge'; 
+GRANT ALL ON ibeacon.* to hoge@localhost;
+```
   * `ble_tag` テーブルの `beacon`に利用するビーコンの識別番号を記述，`name`は対応する人名等を入れる．（管理のため）
   * `ble_tab` テーブルの `active`を1にするとそのビーコンが検出可能になる．
     * DBの`room_log`テーブルには，ビーコンからの生の情報が逐次書き込まれる．（一定時間以上経過したものは削除）
@@ -70,7 +73,6 @@ omznのソフトウェア工学研究室では，4つの部屋(8-320, 8-303, 8-3
 ## モニター (room_monitor)
 
 * Mysql DB内のビュー．
-* DBは任意のものを作成し，その上で`setup_db.sql`を実行．
 
 ## サーバ (apiserver/apiserver.js)
 
@@ -80,11 +82,15 @@ omznのソフトウェア工学研究室では，4つの部屋(8-320, 8-303, 8-3
 
 ### 初期設定
 
-0. 依存するnpmパッケージをインストール．`npm install`
-1. config/default.jsonにmysqlの接続情報を投入．
+1. 依存するnpmパッケージをインストール．`npm install`
+2. config/default.jsonにmysqlの接続情報を記入．
 3. pm2などで起動管理しておくと便利．
 
-### api
+```sh
+$ pm2 start apiserver
+```
+
+### API
 
 * `/beacon/add`
   `POST label=??&detector_id=??&place=??`
@@ -105,12 +111,16 @@ omznのソフトウェア工学研究室では，4つの部屋(8-320, 8-303, 8-3
 
 ## クライアント (ibeacon_scanner)
 
-M5Stack/M5StickC用に作った．切り替えは先頭のこれをどちらか生かす．
+M5Stack/M5Stick-C/M5Stick-C Plus用に作った．切り替えは先頭のこれをどちらか生かす．
 ```c
 #define USE_M5STICKC
+#define USE_M5STICKCPLUS
 #define USE_M5STACK
 ```
-* M5ボタンを押すと，自動割り当てIPアドレス，部屋識別子と検出器IDを確認できる．
+* M5StackはM5Stack communityが提供するBoardを使う(https://m5stack.oss-cn-shenzhen.aliyuncs.com/resource/arduino/package_m5stack_index.json)
+
+
+* M5(M5Stick-C)/B(M5Stack)ボタンを押すと，自動割り当てIPアドレス，部屋識別子と検出器IDを確認できる．
   * 部屋を区別するために部屋識別子(`place`)を利用し，同部屋内に複数設置する検出器を区別するために`detector_id`を使う．
 
 ### API
@@ -147,13 +157,14 @@ $ curl "http://scanner.local/config?url_endpoint=http://10.0.0.1:3001&place=MyRo
 ## ibeacon
 
 * RedBear Lab製 BLE Nano (V1.5, V2.0)用のビーコン発信器
-* `major`, `minor`をプログラムに直書きして埋め込む．
+* `GID_TO_DETECT`, `MY_UID`をプログラムに直書きして埋め込む．
 * CR2032で6ヶ月〜1年運用可能．
 
 ## DB
 
 * `ble_tag` テーブルに，最低限 `label`, `name`, `active`を登録する．
-
+* `alive2`テーブルには，検知器の生存情報が記録される．timestampが1，2分以内にないものはハングアップしてる可能性．
+* `log`テーブルには，各部屋で検知したログ`Found_部屋`と失探したログ`Lost`が残る．
 -------
 
 (c) omzn 2021

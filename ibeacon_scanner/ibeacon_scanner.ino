@@ -7,6 +7,7 @@
 
 #define USE_M5STICKC
 //#define USE_M5STACK
+//#define USE_M5STICKCPLUS
 //#define USE_ESP32MINIKIT
 
 #define DEBUG
@@ -14,12 +15,12 @@
 //#define NO_OTA
 
 // if you want to use default prefs
-// #define FORCE_DEFAULT
+//#define FORCE_DEFAULT
 
-#define DEFAULT_HOSTNAME "scanner"
-#define DEFAULT_ENDPOINT "http://10.0.0.1:3001"
-#define DEFAULT_DETECTOR_ID 0
-#define DEFAULT_PLACE "myroom"
+#define DEFAULT_HOSTNAME "sb_mowat_2F_1"
+#define DEFAULT_ENDPOINT "http://192.168.3.45:3001"
+#define DEFAULT_DETECTOR_ID 1
+#define DEFAULT_PLACE "mowat_2F"
 
 #include <ArduinoJson.h>
 #include <ArduinoOTA.h>
@@ -31,11 +32,16 @@
 #ifdef USE_M5STICKC
 #include <M5StickC.h>
 #endif
+#ifdef USE_M5STICKCPLUS
+#include <M5StickCPlus.h>
+#endif
 #ifdef USE_M5STACK
 #include <M5Stack.h>
 #endif
 #include <Preferences.h>
+#ifndef NO_WEBSERVER
 #include <WebServer.h>
+#endif
 #include <WiFi.h>
 #include <WiFiManager.h>
 #include <esp_wifi.h>
@@ -48,12 +54,18 @@
 #define LED_ON digitalWrite(GPIO_NUM_10, LOW)
 #define LED_OFF digitalWrite(GPIO_NUM_10, HIGH)
 #endif
+#ifdef USE_M5STICKCPLUS
+#define LED_ON digitalWrite(GPIO_NUM_10, LOW)
+#define LED_OFF digitalWrite(GPIO_NUM_10, HIGH)
+#endif
 #ifdef USE_M5STACK
 #define LED_ON ;
 #define LED_OFF ;
 #endif
 
+#ifndef NO_WEBSERVER
 WebServer webServer(80);
+#endif
 Preferences prefs;
 BLEScan *scan;
 uint32_t ptime, screen_timer;
@@ -184,6 +196,10 @@ void postIBeacon(BLEAdvertisedDevice device) {
     M5.Lcd.fillCircle(150, 20, 5, TFT_BLACK);
     M5.Lcd.drawCircle(150, 20, 5, TFT_GREEN);
 #endif
+#ifdef USE_M5STICKCPLUS
+    M5.Lcd.fillCircle(230, 20, 5, TFT_BLACK);
+    M5.Lcd.drawCircle(230, 20, 5, TFT_GREEN);
+#endif
 #ifdef USE_M5STACK
     M5.Lcd.fillCircle(230, 100, 5, TFT_BLACK);
     M5.Lcd.drawCircle(230, 100, 5, TFT_GREEN);
@@ -204,6 +220,9 @@ void postIBeacon(BLEAdvertisedDevice device) {
 #ifdef USE_M5STICKC
     M5.Lcd.fillCircle(150, 20, 5, TFT_GREEN);
 #endif
+#ifdef USE_M5STICKCPLUS
+    M5.Lcd.fillCircle(230, 20, 5, TFT_GREEN);
+#endif
 #ifdef USE_M5STACK
     M5.Lcd.fillCircle(230, 100, 5, TFT_GREEN);
 #endif
@@ -216,7 +235,11 @@ void postIBeacon(BLEAdvertisedDevice device) {
     M5.Lcd.fillCircle(150, 20, 5, TFT_BLACK);
     M5.Lcd.drawCircle(150, 20, 5, TFT_GREEN);
 #endif
-#ifdef USE_M5STICKC
+#ifdef USE_M5STICKCPLUS
+    M5.Lcd.fillCircle(230, 20, 5, TFT_BLACK);
+    M5.Lcd.drawCircle(230, 20, 5, TFT_GREEN);
+#endif
+#ifdef USE_M5STACK
     M5.Lcd.fillCircle(230, 100, 5, TFT_BLACK);
     M5.Lcd.drawCircle(230, 100, 5, TFT_GREEN);
 #endif
@@ -228,6 +251,7 @@ void postIBeacon(BLEAdvertisedDevice device) {
   http.end();
 }
 
+#ifndef NO_WEBSERVER
 void handleStatus() {
   String message;
   DynamicJsonBuffer jsonBuffer;
@@ -247,8 +271,6 @@ void handleConfig() {
     if (argname == "hostname") {
       myhost = argv;
       prefs.putString("hostname", myhost);
-      ArduinoOTA.setHostname(myhost.c_str());
-      WiFi.setHostname(myhost.c_str());
     }
     if (argname == "url_endpoint") {
       url_endpoint = argv;
@@ -291,6 +313,8 @@ void handleConfig() {
   webServer.send(200, "application/json", message);
 }
 
+#endif
+
 void btnHandler() { btn_pressed = 1; }
 
 void setup() {
@@ -326,7 +350,7 @@ void setup() {
   attachInterrupt(GPIO_NUM_37, btnHandler, FALLING);
   pinMode(GPIO_NUM_10, OUTPUT);
   LED_OFF;
-  M5.begin();
+  M5.begin(true,true,true);
   M5.IMU.Init();
   M5.IMU.getAccelData(&accX, &accY, &accZ);
   orient = accX < 0 ? 3 : 1;
@@ -340,6 +364,28 @@ void setup() {
   M5.Lcd.setCursor(0, 20);
   M5.Lcd.print("Connect WiFi AP");
   M5.Lcd.setCursor(0, 40);
+  M5.Lcd.setTextColor(RED);
+  M5.Lcd.print("  BEACON_SCAN  ");
+#endif
+#ifdef USE_M5STICKCPLUS
+  pinMode(GPIO_NUM_37, INPUT_PULLUP);
+  attachInterrupt(GPIO_NUM_37, btnHandler, FALLING);
+  pinMode(GPIO_NUM_10, OUTPUT);
+  LED_OFF;
+  M5.begin(true,true,true);
+  M5.IMU.Init();
+  M5.IMU.getAccelData(&accX, &accY, &accZ);
+  orient = accX < 0 ? 3 : 1;
+  Serial.printf("accx:%f accy:%f accz:%f", accX, accY, accZ);
+  M5.Lcd.fillScreen(BLACK);
+  M5.Axp.ScreenBreath(12);
+  M5.Lcd.setRotation(orient); // 本体の向きに応じて
+  M5.Lcd.setTextFont(2);
+  M5.Lcd.setTextDatum(0);
+  M5.Lcd.setTextColor(WHITE);
+  M5.Lcd.setCursor(40, 45);
+  M5.Lcd.print("Connect WiFi AP");
+  M5.Lcd.setCursor(40, 60);
   M5.Lcd.setTextColor(RED);
   M5.Lcd.print("  BEACON_SCAN  ");
 #endif
@@ -380,6 +426,23 @@ void setup() {
   M5.Lcd.print(WiFi.localIP());
   M5.Axp.SetLDO2(true);
 #endif
+#ifdef USE_M5STICKCPLUS
+  M5.Lcd.fillScreen(BLACK);
+  M5.Lcd.setTextFont(8);
+  M5.Lcd.setTextColor(BLUE);
+  M5.Lcd.setTextDatum(0);
+  M5.Lcd.setCursor(120, 25);
+  M5.Lcd.printf("%d", detector_id);
+  M5.Lcd.setTextFont(4);
+  M5.Lcd.setTextDatum(0);
+  M5.Lcd.setTextColor(WHITE);
+  M5.Lcd.setCursor(40, 51);
+  M5.Lcd.printf("%s", place);
+  M5.Lcd.setTextFont(0);
+  M5.Lcd.setCursor(0, 0);
+  M5.Lcd.print(WiFi.localIP());
+  M5.Axp.SetLDO2(true);
+#endif
 #ifdef USE_M5STACK
   M5.Lcd.setTextSize(1);
   M5.Lcd.fillScreen(BLACK);
@@ -395,7 +458,7 @@ void setup() {
   M5.Lcd.printf("%s", place);
   M5.Lcd.setTextFont(0);
   M5.Lcd.setTextColor(WHITE);
-  M5.Lcd.setCursor(80, 106);
+  M5.Lcd.setCursor(0, 0);
   M5.Lcd.print(WiFi.localIP());
 //  M5.Lcd.setBrightness(0);
 //  M5.Lcd.sleep();
@@ -419,6 +482,9 @@ void setup() {
       })
       .onProgress([](unsigned int progress, unsigned int total) {
 #ifdef USE_M5STICKC
+        digitalWrite(GPIO_NUM_10, (progress / (total / 100)) % 2);
+#endif
+#ifdef USE_M5STICKCPLUS
         digitalWrite(GPIO_NUM_10, (progress / (total / 100)) % 2);
 #endif
         Serial.printf("Progress: %u%%\r", (progress / (total / 100)));
@@ -505,6 +571,33 @@ void loop() {
     M5.Lcd.setTextColor(WHITE);
     M5.Lcd.setCursor(0, 26);
     M5.Lcd.printf("%s", place);
+    M5.Lcd.setTextFont(0);
+    M5.Lcd.setCursor(0, 0);
+    M5.Lcd.print(WiFi.localIP());
+    M5.Axp.SetLDO2(true);
+#endif
+#ifdef USE_M5STICKCPLUS
+    M5.Lcd.fillScreen(BLACK);
+    M5.IMU.getAccelData(&accX, &accY, &accZ);
+    Serial.printf("accx:%f accy:%f accz:%f\n", accX, accY, accZ);
+    orient = accX < 0 ? 3 : 1;
+    M5.Axp.ScreenBreath(12);
+    M5.Lcd.setRotation(orient); // 本体の向きに応じて
+    M5.Lcd.setTextSize(1);
+    M5.Lcd.fillScreen(BLACK);
+    M5.Lcd.setTextFont(8);
+    M5.Lcd.setTextColor(BLUE);
+    M5.Lcd.setTextDatum(0);
+    M5.Lcd.setCursor(120, 25);
+    M5.Lcd.printf("%d", detector_id);
+    M5.Lcd.setTextFont(4);
+    M5.Lcd.setTextDatum(0);
+    M5.Lcd.setTextColor(WHITE);
+    M5.Lcd.setCursor(40, 51);
+    M5.Lcd.printf("%s", place);
+    M5.Lcd.setTextFont(0);
+    M5.Lcd.setCursor(0, 0);
+    M5.Lcd.print(WiFi.localIP());
     M5.Axp.SetLDO2(true);
 #endif
 #ifdef USE_M5STACK
@@ -524,6 +617,9 @@ void loop() {
     M5.Lcd.setTextColor(WHITE);
     M5.Lcd.setCursor(80, 106);
     M5.Lcd.printf("%s", place);
+    M5.Lcd.setTextFont(0);
+    M5.Lcd.setCursor(0, 0);
+    M5.Lcd.print(WiFi.localIP());
 #endif
     btn_pressed = 0;
     screen_timer = millis();
@@ -531,6 +627,9 @@ void loop() {
   if (screen_timer > 0) {
     if (millis() > screen_timer + 20000) {
 #ifdef USE_M5STICKC
+      M5.Axp.SetLDO2(false);
+#endif
+#ifdef USE_M5STICKCPLUS
       M5.Axp.SetLDO2(false);
 #endif
 #ifdef USE_M5STACK
@@ -543,6 +642,9 @@ void loop() {
 
 #ifdef USE_M5STICKC
   M5.Lcd.fillCircle(150, 5, 5, TFT_BLUE);
+#endif
+#ifdef USE_M5STICKCPLUS
+  M5.Lcd.fillCircle(230, 5, 5, TFT_BLUE);
 #endif
 #ifdef USE_M5STACK
   M5.Lcd.fillCircle(230, 85, 5, TFT_BLUE);
@@ -561,19 +663,18 @@ void loop() {
 #endif
     if (d.haveManufacturerData()) {
       if (isIBeacon(d)) {
-#ifndef DISABLE_GID_CHECK
         if (getMajor(d) == GID_TO_DETECT) {
-#endif
           printIBeacon(d);
           postIBeacon(d);
-#ifndef DISABLE_GID_CHECK
         }
-#endif
       }
     }
   }
 #ifdef USE_M5STICKC
   M5.Lcd.fillCircle(150, 5, 5, TFT_BLACK);
+#endif
+#ifdef USE_M5STICKCPLUS
+  M5.Lcd.fillCircle(230, 5, 5, TFT_BLACK);
 #endif
 #ifdef USE_M5STACK
   M5.Lcd.fillCircle(230, 85, 5, TFT_BLACK);
